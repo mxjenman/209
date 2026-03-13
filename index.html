@@ -36,6 +36,7 @@ td,th{padding:8px;border-bottom:1px solid #ddd;font-size:14px;text-align:left}
 <th>激活码</th>
 <th>是否使用</th>
 <th>设备ID</th>
+<th>操作</th>
 </tr>
 </thead>
 
@@ -75,26 +76,41 @@ render();
 }
 
 function render(){
-
-let html = "";
-
-for(let code in db){
-
-html += `
-<tr>
-<td>${code}</td>
-<td>${db[code].used ? "已使用" : "未使用"}</td>
-<td>${db[code].device || "-"}</td>
-</tr>
-`;
-
-}
-
-document.getElementById("list").innerHTML = html;
-
+    let html = "";
+    for(let code in db){
+        html += `
+        <tr>
+            <td>${code}</td>
+            <td>${db[code].used ? "已使用" : "未使用"}</td>
+            <td>${db[code].device || "-"}</td>
+            <td>
+                <button style="background:#28a745; margin-right:5px;" onclick="copyCode('${code}')">复制</button>
+                <button style="background:#dc3545;" onclick="deleteCode('${code}')">删除</button>
+            </td>
+        </tr>
+        `;
+    }
+    document.getElementById("list").innerHTML = html;
 }
 
 render();
+// --- 新增功能：复制激活码 ---
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        alert("激活码已复制到剪贴板：" + code);
+    }).catch(err => {
+        alert("复制失败，请手动复制");
+    });
+}
+
+// --- 新增功能：删除激活码 ---
+function deleteCode(code) {
+    if(confirm("确定要删除这个激活码吗？删除后将无法使用。")) {
+        delete db[code]; // 从数据里删掉
+        save();         // 保存到本地存储
+        render();       // 重新刷新页面列表
+    }
+}
 </script>
 
 </body>
