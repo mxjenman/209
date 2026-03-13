@@ -49,66 +49,91 @@ td,th{padding:8px;border-bottom:1px solid #ddd;font-size:14px;text-align:left}
 let db = JSON.parse(localStorage.getItem("codes") || "{}");
 
 function save(){
-localStorage.setItem("codes", JSON.stringify(db));
+    localStorage.setItem("codes", JSON.stringify(db));
 }
 
 function randomCode(){
-return "ACT-" + Math.random().toString(36).substr(2,8).toUpperCase();
+    return "ACT-" + Math.random().toString(36).substr(2,8).toUpperCase();
 }
 
 function generate(){
+    let n = Number(document.getElementById("count").value);
 
-let n = Number(document.getElementById("count").value);
+    if (!n || n < 1) {
+        alert("请输入正确的生成数量");
+        return;
+    }
 
-for(let i=0;i<n;i++){
+    for(let i = 0; i < n; i++){
+        let code = randomCode();
 
-let code = randomCode();
+        while (db[code]) {
+            code = randomCode();
+        }
 
-db[code] = {
-used:false,
-device:""
-};
+        db[code] = {
+            used: false,
+            usedAt: "",
+            usedDevice: "",
+            useCount: 0
+        };
+    }
 
-}
-
-save();
-render();
+    save();
+    render();
+    alert("激活码生成成功！");
 }
 
 function render(){
     let html = "";
+
     for(let code in db){
         html += `
         <tr>
             <td>${code}</td>
             <td>${db[code].used ? "已使用" : "未使用"}</td>
-            <td>${db[code].device || "-"}</td>
+            <td>${db[code].usedDevice || "-"}</td>
             <td>
                 <button style="background:#28a745; margin-right:5px;" onclick="copyCode('${code}')">复制</button>
+                <button style="background:#007bff; margin-right:5px;" onclick="resetCode('${code}')">重置</button>
                 <button style="background:#dc3545;" onclick="deleteCode('${code}')">删除</button>
             </td>
         </tr>
         `;
     }
+
     document.getElementById("list").innerHTML = html;
 }
 
 render();
-// --- 新增功能：复制激活码 ---
+
 function copyCode(code) {
     navigator.clipboard.writeText(code).then(() => {
         alert("激活码已复制到剪贴板：" + code);
-    }).catch(err => {
+    }).catch(() => {
         alert("复制失败，请手动复制");
     });
 }
 
-// --- 新增功能：删除激活码 ---
+function resetCode(code) {
+    if(confirm("确定要把这个激活码恢复成未使用吗？")) {
+        db[code] = {
+            used: false,
+            usedAt: "",
+            usedDevice: "",
+            useCount: 0
+        };
+        save();
+        render();
+        alert("已重置为未使用");
+    }
+}
+
 function deleteCode(code) {
     if(confirm("确定要删除这个激活码吗？删除后将无法使用。")) {
-        delete db[code]; // 从数据里删掉
-        save();         // 保存到本地存储
-        render();       // 重新刷新页面列表
+        delete db[code];
+        save();
+        render();
     }
 }
 </script>
